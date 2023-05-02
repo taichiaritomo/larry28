@@ -29,6 +29,9 @@
       video.show {
         opacity: 1;
       }
+      audio {
+        visibility: hidden;
+      }
       main {
         display: block;
         width: 0;
@@ -51,49 +54,70 @@
         border-radius: 50%;
         background: white;
         z-index: 1;
+        display: none;
       }
       div.piece:nth-child(2n + 1) {
         background: antiquewhite;
+      }
+      .prompt {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+      }
+      .prompt.hide {
+        display: none;
       }
     </style>
   </head>
   <body>
     <video src="IMG_8030.mp4" muted="muted" loop="true"></video>
+    <audio><source id="audioSource" src="hh_trimmed.mp3"></source></audio>
+    <div class="prompt">
+      <div>( enter )</div>
+    </div>
     <div class="source">
-      <div>Lawrence...</div>
-      <div>Another time around...</div>
-      <div>as other times</div>
-      <div>you get your</div>
+      <div>Lawrence</div>
+      <div>Another time around</div>
+      <div>Like previous times</div>
+      <div>You get your</div>
       <div>nice days at the park</div>
       <div>some kids on the court</div>
       <div>you crush their egos</div>
-      <div>and then</div>
+      <div>and then you</div>
       <div>drink a gallon of water</div>
       <div>ahhhhhhhhhhhhh</div>
-      <div>you get a weird day</div>
+      <div>You get your weird days</div>
       <div>you hear some wacky stuff</div>
       <div>coming out of someone's mouth</div>
       <div>and next thing you know</div>
-      <div>you're yelling at them</div>
-      <div>it's a lot of energy</div>
-      <div>sometimes it's just burning</div>
-      <div>it's nice if it at least</div>
-      <div>keeps someone next to you warm</div>
-      <div>You get your day</div>
-      <div>with an amazing coincidence</div>
-      <div>spiritual even</div>
-      <div>In conclusion,</div>
+      <div>you're yelling your mind!</div>
+      <div>being mad takes so much energy</div>
+      <div>it's just burning</div>
+      <div>but at least it might</div>
+      <div>keep someone next to you</div>
+      <div>warm</div>
+      <div>And you get your days</div>
+      <div>an amazing coincidence occurs</div>
+      <div>it's spiritual, even</div>
+      <div>So yeah</div>
       <div>Thanks for being</div>
       <div>a great friend</div>
-      <div>28th time...</div>
-      <div>28th summer...</div>
+      <div>28th time</div>
+      <div>28th summer</div>
       <div>See ya tmrw</div>
-      <div>for mushrooms</div>
     </div>
     <main>
     </main>
     <script>
       const video = document.querySelector('video')
+      const audio = document.querySelector('audio')
       // video.style.display = 'none'
       const main = document.body.querySelector('main')
       const divs = document.body.querySelectorAll('.source div')
@@ -103,14 +127,14 @@
         chars.push(innerText.split(''))
       })
       let r = 400
-      let step = 7
+      let stepDistance = 7
       let theta0 = -3 / 4 * Math.PI
       let theta = 0
       let charIndex = 0
       let revolution = 0
-      const distanceBetweenRevolutions = 1.93 * step
+      const distanceBetweenRevolutions = 1.92 * stepDistance
       function update() {
-        const dTheta = getThetaFromRadiusAndArcLength(r, step)
+        const dTheta = getThetaFromRadiusAndArcLength(r, stepDistance)
         theta = theta + dTheta
         const newRevolution = Math.floor(theta / (2 * Math.PI))
         if (newRevolution > revolution) {
@@ -125,22 +149,61 @@
         charIndex++
         const rStep = calculateRadiusStep(r)
         r -= rStep
-        if (r > 5) {
-          setTimeout(update, 1)
-        } else {
-          setTimeout(showVideo, 500)
+      }
+      while (r > 5) {
+        update()
+      }
+
+      const pieces = document.querySelectorAll('main .piece')
+      let pieceIndex = 0
+      let start, previousTimeStamp;
+      let done = false;
+      const piecesPerSecond = 300;
+      function step(timestamp) {
+        if (start === undefined) {
+          start = timestamp;
+        }
+        if (previousTimeStamp === undefined) {
+          previousTimeStamp = timestamp;
+        }
+        if (pieceIndex === pieces.length) {
+          done = true
+          showVideo()
+          return
+        }
+        if (previousTimeStamp !== timestamp) {
+          const dT = timestamp - previousTimeStamp
+          const numPieces = Math.floor(dT / 1000 * piecesPerSecond)
+          console.log(numPieces)
+          if (numPieces > 0) {
+            const initialPieceIndex = pieceIndex
+            const maxPieceIndex = Math.min(pieceIndex + numPieces, pieces.length)
+            let count = 0
+            for (let i = pieceIndex; i < maxPieceIndex; i++) {
+              pieces[i].style.display = 'block'
+              count += 1
+            }
+            pieceIndex += count
+            previousTimeStamp = timestamp
+          }
+        }
+        if (!done) {
+          window.requestAnimationFrame(step)
         }
       }
-      // while (r > 10) {
-      //   console.log(r)
-      //   update()
-      // }
-      update()
+
+      const prompt = document.querySelector('.prompt')
+      prompt.addEventListener('click', () => {
+        console.log('start')
+        prompt.classList.add('hide')
+        window.requestAnimationFrame(step);
+      }, {once: true})
 
       function showVideo() {
-        // video.style.display = 'block'
         video.classList.add('show')
+        video.currentTime = 0
         video.play()
+        audio.play()
       }
 
       function createDiv(x, y, newTheta, char) {
@@ -158,7 +221,7 @@
       function calculateRadiusStep(r) {
         // calculate how many steps it will take to come back around to the same theta
         // 2 * PI * r / step
-        const iterations = 2 * Math.PI * r / step
+        const iterations = 2 * Math.PI * r / stepDistance
         const dR = distanceBetweenRevolutions/iterations
         return dR
       }
