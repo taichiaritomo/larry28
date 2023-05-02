@@ -1,0 +1,170 @@
+<html>
+  <head>
+    <style>
+      html {
+        background: dimgray;
+        color: white;
+        font-size: 12px;
+        font-family: monospace;
+      }
+      body {
+        margin: 0;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-width: 800px;
+        min-height: 800px;
+      }
+      video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        transition: opacity 4s linear;
+      }
+      video.show {
+        opacity: 1;
+      }
+      main {
+        display: block;
+        width: 0;
+        height: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%)
+      }
+      div.source div {
+        opacity: 0;
+      }
+      div.piece {
+        position: absolute;
+        width: 0px;
+        height: 0px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        background: white;
+        z-index: 1;
+      }
+      div.piece:nth-child(2n + 1) {
+        background: antiquewhite;
+      }
+    </style>
+  </head>
+  <body>
+    <video src="IMG_8030.mp4" muted="muted" loop="true"></video>
+    <div class="source">
+      <div>Lawrence...</div>
+      <div>Another time around...</div>
+      <div>as other times</div>
+      <div>you get your</div>
+      <div>nice days at the park</div>
+      <div>some kids on the court</div>
+      <div>you crush their egos</div>
+      <div>and then</div>
+      <div>drink a gallon of water</div>
+      <div>ahhhhhhhhhhhhh</div>
+      <div>you get a weird day</div>
+      <div>you hear some wacky stuff</div>
+      <div>coming out of someone's mouth</div>
+      <div>and next thing you know</div>
+      <div>you're yelling at them</div>
+      <div>it's a lot of energy</div>
+      <div>sometimes it's just burning</div>
+      <div>it's nice if it at least</div>
+      <div>keeps someone next to you warm</div>
+      <div>You get your day</div>
+      <div>with an amazing coincidence</div>
+      <div>spiritual even</div>
+      <div>In conclusion,</div>
+      <div>Thanks for being</div>
+      <div>a great friend</div>
+      <div>28th time...</div>
+      <div>28th summer...</div>
+      <div>See ya tmrw</div>
+      <div>for mushrooms</div>
+    </div>
+    <main>
+    </main>
+    <script>
+      const video = document.querySelector('video')
+      // video.style.display = 'none'
+      const main = document.body.querySelector('main')
+      const divs = document.body.querySelectorAll('.source div')
+      const chars = [] // string[][]
+      divs.forEach(div => {
+        const innerText = div.innerText
+        chars.push(innerText.split(''))
+      })
+      let r = 400
+      let step = 7
+      let theta0 = -3 / 4 * Math.PI
+      let theta = 0
+      let charIndex = 0
+      let revolution = 0
+      const distanceBetweenRevolutions = 1.93 * step
+      function update() {
+        const dTheta = getThetaFromRadiusAndArcLength(r, step)
+        theta = theta + dTheta
+        const newRevolution = Math.floor(theta / (2 * Math.PI))
+        if (newRevolution > revolution) {
+          charIndex = 0
+          revolution = newRevolution
+        }
+        const newTheta = theta0 + theta
+        const x = r * Math.cos(newTheta)
+        const y = r * Math.sin(newTheta)
+        const character = chars[revolution]?.[charIndex] || '.'
+        createDiv(x, y, newTheta, character)
+        charIndex++
+        const rStep = calculateRadiusStep(r)
+        r -= rStep
+        if (r > 5) {
+          setTimeout(update, 1)
+        } else {
+          setTimeout(showVideo, 500)
+        }
+      }
+      // while (r > 10) {
+      //   console.log(r)
+      //   update()
+      // }
+      update()
+
+      function showVideo() {
+        // video.style.display = 'block'
+        video.classList.add('show')
+        video.play()
+      }
+
+      function createDiv(x, y, newTheta, char) {
+        const el = document.createElement('div')
+        el.className = 'piece'
+        el.style.left = `${x}px`
+        el.style.top = `${y}px`
+        el.innerText = char
+        el.style.transform = `rotate(${newTheta + Math.PI/2}rad)`
+        main.append(el)
+      }
+      function getThetaFromRadiusAndArcLength(r, arcLength) {
+        return arcLength / r
+      }
+      function calculateRadiusStep(r) {
+        // calculate how many steps it will take to come back around to the same theta
+        // 2 * PI * r / step
+        const iterations = 2 * Math.PI * r / step
+        const dR = distanceBetweenRevolutions/iterations
+        return dR
+      }
+      function estimatedStepsFromTop(r) {
+        
+      }
+    </script>
+  </body>
+</html>
